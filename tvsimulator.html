@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MasterBroadcaster Studio — Symulator Telewizji na Żywo</title>
+  <style>
+    :root {
+      --bg-dark: #0b0e14;
+      --bg-panel: #131822;
+      --bg-card: #1b2230;
+      --border: #2a3447;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --pro: #eab308;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* TOPBAR */
+    header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 1.2rem;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-badge {
+      background: var(--danger);
+      color: #fff;
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      background: #252f42;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
+    }
+
+    .btn-pro {
+      background: linear-gradient(135deg, #d97706, #eab308);
+      border: none;
+      color: #000;
+      font-weight: 800;
+    }
+
+    .btn-help {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 800;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+    }
+
+    /* AUTH SCREEN */
+    #auth-screen {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .auth-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: var(--bg-dark);
+      padding: 4px;
+      border-radius: 8px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: 0.2s;
+    }
+
+    .auth-tab.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .auth-msg {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      text-align: center;
+      min-height: 20px;
+    }
+
+    /* MAIN APP */
+    #app-screen {
+      display: none;
+      flex: 1;
+      grid-template-columns: 280px 1fr 320px;
+      gap: 16px;
+      padding: 16px;
+      max-width: 1800px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 1200px) {
+      #app-screen {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* CHANNEL LIST */
+    .channel-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+
+    .channel-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .channel-item:hover, .channel-item.active {
+      border-color: var(--accent);
+      background: #222b3d;
+    }
+
+    .channel-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mini-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.75rem;
+      overflow: hidden;
+      background: #000;
+      flex-shrink: 0;
+    }
+
+    .mini-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* MONITOR / MCR */
+    .monitor-wrapper {
+      background: #000;
+      border: 2px solid #2a3447;
+      border-radius: 10px;
+      position: relative;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 60px rgba(0,0,0,0.9);
+    }
+
+    .monitor-bg {
+      position: absolute;
+      inset: 0;
+      transition: 0.4s;
+      background: radial-gradient(circle at center, #111827 0%, #000000 100%);
+    }
+
+    /* GRAPHIC PACK STYLES (Blender & Google Flow) */
+    .gfx-blender-news {
+      background: linear-gradient(135deg, #091e3a 0%, #1d4ed8 50%, #020617 100%) !important;
+    }
+    .gfx-blender-sport {
+      background: linear-gradient(135deg, #064e3b 0%, #10b981 50%, #022c22 100%) !important;
+    }
+    .gfx-flow-neon {
+      background: radial-gradient(circle at 20% 30%, #7e22ce, #1e1b4b 60%, #000) !important;
+    }
+    .gfx-flow-gold {
+      background: linear-gradient(135deg, #451a03 0%, #b45309 50%, #090d16 100%) !important;
+    }
+
+    .grid-3d {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+      transform: perspective(400px) rotateX(45deg);
+      transform-origin: bottom;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    /* SCREEN WATERMARK LOGO */
+    .screen-logo {
+      position: absolute;
+      top: 22px;
+      right: 26px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      font-weight: 900;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      user-select: none;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    .screen-logo img {
+      max-height: 54px;
+      max-width: 140px;
+      object-fit: contain;
+    }
+
+    /* AGE RATING BADGE */
+    .age-badge {
+      position: absolute;
+      top: 22px;
+      left: 26px;
+      z-index: 20;
+      width: 42px;
+      height: 42px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+      border: 2px solid rgba(255,255,255,0.8);
+    }
+
+    .age-smile { background: #16a34a; font-size: 1.3rem; }
+    .age-7 { background: #2563eb; }
+    .age-12 { background: #eab308; color: #000; }
+    .age-16 { background: #ea580c; }
+    .age-18 { background: #dc2626; }
+
+    /* ON AIR STATUS */
+    .on-air-pill {
+      position: absolute;
+      top: 26px;
+      left: 82px;
+      z-index: 20;
+      background: rgba(0,0,0,0.75);
+      border: 1px solid #ef4444;
+      color: #ef4444;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      display: none;
+    }
+
+    .on-air-pill.live {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* STUDIO SCENE / CENTER CONTENT */
+    .studio-center {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 20px;
+      max-width: 80%;
+    }
+
+    .studio-category-tag {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(4px);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 10px;
+    }
+
+    .studio-headline {
+      font-size: 1.8rem;
+      font-weight: 800;
+      text-shadow: 0 2px 15px rgba(0,0,0,0.8);
+    }
+
+    /* AD BREAK OVERLAY (KEY 'R') */
+    .ad-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      z-index: 35;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .ad-overlay.active {
+      display: flex;
+    }
+
+    .ad-tag {
+      border: 2px solid #fff;
+      padding: 8px 24px;
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      margin-bottom: 12px;
+    }
+
+    /* LOWER THIRD & TICKER (RAMÓWKA) */
+    .lower-third {
+      position: absolute;
+      bottom: 42px;
+      left: 26px;
+      right: 26px;
+      z-index: 25;
+      background: linear-gradient(90deg, rgba(15,23,42,0.95), rgba(30,58,138,0.9));
+      border-left: 6px solid var(--accent);
+      padding: 10px 18px;
+      border-radius: 0 8px 8px 0;
+      display: none;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+    }
+
+    .lower-third.visible {
+      display: block;
+    }
+
+    .lt-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .lt-sub {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+    }
+
+    .ticker-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 32px;
+      background: #b91c1c;
+      color: #fff;
+      z-index: 25;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .ticker-label {
+      background: #7f1d1d;
+      padding: 0 14px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      z-index: 2;
+      white-space: nowrap;
+    }
+
+    .ticker-text {
+      white-space: nowrap;
+      padding-left: 100%;
+      animation: tickerMove 18s linear infinite;
+    }
+
+    @keyframes tickerMove {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* GEOMETRY SHAPES */
+    .geo-circle { border-radius: 50%; }
+    .geo-square { border-radius: 4px; }
+    .geo-pill { border-radius: 999px; }
+    .geo-diamond { transform: rotate(45deg); }
+    .geo-diamond span { transform: rotate(-45deg); display: inline-block; }
+    .geo-hex { clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); padding: 10px 18px; }
+
+    /* CONTROLS GRID */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    /* CHAT & BOTS */
+    .chat-box {
+      flex: 1;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      height: 280px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.85rem;
+    }
+
+    .chat-msg {
+      padding: 5px 8px;
+      border-radius: 5px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .chat-user {
+      font-weight: 700;
+      color: var(--accent);
+      margin-right: 6px;
+    }
+
+    .chat-bot-tag {
+      background: #4f46e5;
+      color: #fff;
+      font-size: 0.65rem;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-right: 5px;
+    }
+
+    /* MODALS */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 640px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+
+    .preset-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .badge-pro {
+      background: var(--pro);
+      color: #000;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .badge-admin {
+      background: var(--danger);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAVIGATION -->
+  <header>
+    <div class="brand">
+      <span>MASTERBROADCASTER STUDIO</span>
+      <span class="brand-badge">LIVE MCR</span>
+    </div>
+    <div class="header-actions" id="header-controls" style="display: none;">
+      <span id="user-display" style="font-size: 0.88rem; font-weight: 600;"></span>
+      <button class="btn btn-pro" onclick="openModal('modal-premium')">★ PREMIUM</button>
+      <button class="btn" id="btn-admin-panel" onclick="openAdminPanel()">🛡️ Panel Admina</button>
+      <button class="btn btn-help" title="Pomoc i skróty" onclick="openModal('modal-help')">?</button>
+      <button class="btn btn-danger" onclick="logout()">Wyloguj</button>
+    </div>
+  </header>
+
+  <!-- AUTHENTICATION SCREEN -->
+  <section id="auth-screen">
+    <div class="auth-box">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h2 style="font-size: 1.4rem; margin-bottom: 4px;">System Emisji Telewizyjnej</h2>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">Zaloguj się lub utwórz nowe konto nadawcy</p>
+      </div>
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Logowanie</div>
+        <div class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Rejestracja</div>
+      </div>
+
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+        <div class="form-group">
+          <label for="auth-username">Nazwa użytkownika (Login)</label>
+          <input type="text" id="auth-username" class="form-control" placeholder="Wpisz swój login..." required />
+        </div>
+        <div class="form-group">
+          <label for="auth-password">Hasło</label>
+          <input type="password" id="auth-password" class="form-control" placeholder="Wpisz hasło..." required />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 11px;" id="auth-submit-btn">
+          Zaloguj się do studia
+        </button>
+      </form>
+
+      <div class="auth-msg" id="auth-message"></div>
+    </div>
+  </section>
+
+  <!-- MAIN STUDIO WORKSPACE -->
+  <main id="app-screen">
+    <!-- LEFT COLUMN: STATIONS & CREATOR -->
+    <aside class="panel">
+      <div class="panel-title">
+        <span>Twoje Stacje TV</span>
+        <button class="btn btn-primary" style="padding: 4px 10px; font-size: 0.78rem;" onclick="openModal('modal-creator')">+ Nowa Stacja</button>
+      </div>
+
+      <div class="channel-list" id="channel-list">
+        <!-- Channels rendered dynamically -->
+      </div>
+
+      <div class="panel-title" style="margin-top: 8px;">
+        <span>Oprawy Graficzne 3D</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <button class="btn" onclick="setGraphicPack('default')">⬛ Czarne Okno (Czyste MCR)</button>
+        <button class="btn" onclick="setGraphicPack('gfx-blender-news')">🧊 Blender 3D: Studio Informacyjne</button>
+        <button class="btn" onclick="setGraphicPack('gfx-blender-sport')">⚽ Blender 3D: Arena Sportowa</button>
+        <button class="btn" onclick="setGraphicPack('gfx-flow-neon')">🌊 Google Flow: Neon Studio</button>
+        <button class="btn" onclick="setGraphicPack('gfx-flow-gold')">✨ Google Flow: Gala & Rozrywka</button>
+      </div>
+    </aside>
+
+    <!-- CENTER COLUMN: LIVE MONITOR & MCR -->
+    <section class="panel">
+      <div class="panel-title">
+        <span id="active-station-header">Podgląd Emisji (MCR)</span>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-danger" id="btn-toggle-live" onclick="toggleLiveBroadcast()">🔴 START TRANSMISJI</button>
+          <button class="btn" onclick="toggleAdBreak()" title="Skrót klawiszowy: R">📺 Reklama [R]</button>
+        </div>
+      </div>
+
+      <!-- MONITOR WINDOW -->
+      <div class="monitor-wrapper">
+        <div class="monitor-bg" id="monitor-bg"></div>
+        <div class="grid-3d"></div>
+
+        <!-- AGE CATEGORY -->
+        <div class="age-badge age-smile" id="screen-age">😊</div>
+
+        <!-- ON AIR PILL -->
+        <div class="on-air-pill" id="on-air-pill">● NA ŻYWO</div>
+
+        <!-- STATION LOGO WATERMARK -->
+        <div class="screen-logo geo-square" id="screen-logo" style="background: #2563eb; color: #ffffff;">
+          <span>TV STUDIO</span>
+        </div>
+
+        <!-- STUDIO CONTENT -->
+        <div class="studio-center">
+          <div class="studio-category-tag" id="screen-category">OGÓLNY</div>
+          <div class="studio-headline" id="screen-headline">Oczekiwanie na rozpoczęcie emisji programu...</div>
+        </div>
+
+        <!-- AD BREAK OVERLAY -->
+        <div class="ad-overlay" id="ad-overlay">
+          <div class="ad-tag">REKLAMA</div>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">Blok reklamowy stacji <strong id="ad-station-name">TV</strong>. Naciśnij <strong>R</strong> aby wrócić na antenę.</p>
+        </div>
+
+        <!-- LOWER THIRD -->
+        <div class="lower-third" id="lower-third">
+          <div class="lt-title" id="lt-title-display">WYDANIE SPECJALNE</div>
+          <div class="lt-sub" id="lt-sub-display">Transmisja na żywo ze studia głównego</div>
+        </div>
+
+        <!-- RAMÓWKA / TICKER -->
+        <div class="ticker-bar">
+          <div class="ticker-label" id="ticker-cat-label">RAMÓWKA</div>
+          <div class="ticker-text" id="ticker-text-display">
+            18:00 Serwis Informacyjny • 19:30 Pogoda • 20:00 Wieczór Sportowy • 21:30 Film Fabularny • Dziękujemy za oglądanie!
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE BROADCAST CONTROLS -->
+      <div class="controls-grid">
+        <div class="form-group" style="margin: 0;">
+          <label>Kategoria Wiekowa</label>
+          <select class="form-control" id="ctrl-age" onchange="updateAgeRating(this.value)">
+            <option value="smile">😊 Bez ograniczeń</option>
+            <option value="7">7+ Od lat 7</option>
+            <option value="12">12+ Od lat 12</option>
+            <option value="16">16+ Od lat 16</option>
+            <option value="18">18+ Tylko dla dorosłych</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label>Kategoria Kanału</label>
+          <select class="form-control" id="ctrl-category" onchange="updateLiveMetadata()">
+            <option value="NEWS / INFORMACJE">News / Informacje</option>
+            <option value="SPORT NA ŻYWO">Sport</option>
+            <option value="ROZRYWKA / SHOW">Rozrywka</option>
+            <option value="FILM I SERIAL">Film i Serial</option>
+            <option value="MUZYKA">Muzyka</option>
+            <option value="TECHNOLOGIA / GAMING">Technologia / Gaming</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label>Tytuł Programu (Na ekranie)</label>
+          <input type="text" class="form-control" id="ctrl-headline" value="Wiadomości Wieczorne" oninput="updateLiveMetadata()" />
+        </div>
+      </div>
+
+      <div class="controls-grid">
+        <div class="form-group" style="margin: 0;">
+          <label>Belka Ekranowa — Nagłówek</label>
+          <input type="text" class="form-control" id="ctrl-lt-title" value="PILNE: TRANSMISJA NA ŻYWO" />
+        </div>
+        <div class="form-group" style="margin: 0;">
+          <label>Belka Ekranowa — Podpis</label>
+          <input type="text" class="form-control" id="ctrl-lt-sub" value="Studio MasterBroadcaster HD" />
+        </div>
+        <div style="display: flex; align-items: flex-end;">
+          <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="toggleLowerThird()">Pokaż / Ukryj Belkę</button>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin: 0;">
+        <label>Pasek Ramówki (Logoekranowe / Ticker na dole)</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" class="form-control" id="ctrl-ramowka" value="18:00 Fakty i Wydarzenia • 19:00 Sport • 20:15 Kino Wieczorne • 22:30 Podsumowanie Dnia" />
+          <button class="btn" onclick="updateLiveMetadata()">Aktualizuj</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN: VIEWER CHAT & BOTS -->
+    <aside class="panel">
+      <div class="panel-title">
+        <span>Widownia i Boty AI</span>
+        <span id="viewer-count" style="color: var(--success); font-size: 0.8rem;">👁️ 0 widzów</span>
+      </div>
+
+      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <button class="btn" id="btn-toggle-bots" onclick="toggleBots()">🤖 Boty Czatu: OFF</button>
+        <button class="btn" onclick="boostBotViewers()">🚀 Dodaj Widzów (+500)</button>
+      </div>
+
+      <div class="chat-box" id="chat-box">
+        <div class="chat-msg"><span style="color: var(--text-muted);">System: Studio gotowe do emisji. Uruchom transmisję lub włącz boty widzów.</span></div>
+      </div>
+
+      <form onsubmit="sendChatMessage(event)" style="display: flex; gap: 6px;">
+        <input type="text" id="chat-input" class="form-control" placeholder="Napisz na czacie stacji..." />
+        <button type="submit" class="btn btn-primary">Wyślij</button>
+      </form>
+    </aside>
+  </main>
+
+  <!-- MODAL: STATION CREATOR (GEOMETRY + FILE UPLOAD) -->
+  <div class="modal-backdrop" id="modal-creator">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Kreator Nowej Stacji Telewizyjnej</h3>
+        <button class="btn" onclick="closeModal('modal-creator')">✕</button>
+      </div>
+
+      <div class="preset-row">
+        <button type="button" class="btn" onclick="applyPreset('TVN')">Styl TVN</button>
+        <button type="button" class="btn" onclick="applyPreset('TVP')">Styl TVP</button>
+        <button type="button" class="btn" onclick="applyPreset('TTV')">Styl TTV</button>
+        <button type="button" class="btn" onclick="applyPreset('POLSAT')">Styl Sport/News</button>
+      </div>
+
+      <div class="form-group">
+        <label>Nazwa Stacji TV</label>
+        <input type="text" id="new-station-name" class="form-control" placeholder="np. TVN 24, TVP Sport, Moja TV..." value="MOJA TV" />
+      </div>
+
+      <div class="form-group">
+        <label>Tryb Logo Stacji</label>
+        <select id="logo-mode" class="form-control" onchange="toggleLogoMode()">
+          <option value="geo">Buduj z Geometrii (Układy Geo + Tekst)</option>
+          <option value="upload">Wgraj własne zdjęcie z pliku (PNG/JPG)</option>
+        </select>
+      </div>
+
+      <!-- GEOMETRY BUILDER -->
+      <div id="geo-builder-section">
+        <div class="controls-grid" style="margin-bottom: 12px;">
+          <div class="form-group" style="margin: 0;">
+            <label>Układ Geometryczny</label>
+            <select id="geo-shape" class="form-control" onchange="updateCreatorPreview()">
+              <option value="geo-square">Kwadrat / Prostokąt (Podstawowy)</option>
+              <option value="geo-circle">Koło / Okrąg (Klasyczny)</option>
+              <option value="geo-pill">Kapsuła (Nowoczesny)</option>
+              <option value="geo-diamond">Romb (Dynamiczny)</option>
+              <option value="geo-hex">Sześciokąt (Ponad podstawowy)</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin: 0;">
+            <label>Kolor Tła Geometrii</label>
+            <input type="color" id="geo-bg-color" class="form-control" value="#2563eb" style="height: 40px; padding: 2px;" onchange="updateCreatorPreview()" />
+          </div>
+
+          <div class="form-group" style="margin: 0;">
+            <label>Kolor Tekstu Logo</label>
+            <input type="color" id="geo-text-color" class="form-control" value="#ffffff" style="height: 40px; padding: 2px;" onchange="updateCreatorPreview()" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Tekst na Logo (Skrót stacji)</label>
+          <input type="text" id="geo-text" class="form-control" value="TV" maxlength="10" oninput="updateCreatorPreview()" />
+        </div>
+      </div>
+
+      <!-- FILE UPLOAD BUILDER -->
+      <div id="upload-builder-section" style="display: none; margin-bottom: 14px;">
+        <div class="form-group">
+          <label>Wybierz plik graficzny z komputera</label>
+          <input type="file" id="logo-file-input" class="form-control" accept="image/*" onchange="handleLogoFileUpload(event)" />
+        </div>
+      </div>
+
+      <!-- LIVE PREVIEW IN CREATOR -->
+      <div style="background: #000; padding: 24px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; border: 1px dashed var(--border);">
+        <div id="creator-logo-preview" class="screen-logo geo-square" style="position: static; background: #2563eb; color: #fff;">
+          <span>TV</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px;" onclick="createStation()">
+        Zapisz i Uruchom Stację
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: HELP (?) -->
+  <div class="modal-backdrop" id="modal-help">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Instrukcja Obsługi Studia TV (?)</h3>
+        <button class="btn" onclick="closeModal('modal-help')">✕</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; line-height: 1.5; color: #d1d5db;">
+        <p><strong>1. Tworzenie Stacji:</strong> Kliknij <em>+ Nowa Stacja</em>, wybierz gotowy styl (TVN, TVP, TTV), zbuduj logo z figur geometrycznych albo wgraj własny plik graficzny z dysku.</p>
+        <p><strong>2. Transmisja na Żywo:</strong> W oknie centralnym kliknij <em>START TRANSMISJI</em>, aby wejść na antenę i uruchomić licznik widzów.</p>
+        <p><strong>3. Blok Reklamowy (Klawisz R):</strong> Naciśnij klawisz <strong>R</strong> na klawiaturze (poza polami tekstowymi) lub kliknij przycisk <em>Reklama [R]</em>, aby natychmiast przełączyć antenę na blok reklamowy.</p>
+        <p><strong>4. Oprawy 3D (Blender & Google Flow):</strong> Wybierz styl scenografii w lewym panelu, ustaw kategorię wiekową (😊, 7+, 12+, 16+, 18+), kategorię kanału oraz pasek ramówki na dole ekranu.</p>
+        <p><strong>5. Boty Widzów:</strong> W prawym panelu aktywuj boty AI, które automatycznie komentują Twoją transmisję na żywo.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PREMIUM -->
+  <div class="modal-backdrop" id="modal-premium">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Pakiet Nadawcy PRO (Premium)</h3>
+        <button class="btn" onclick="closeModal('modal-premium')">✕</button>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 14px;">
+        Status PRO odblokowuje nielimitowaną liczbę stacji TV, złotą odznakę nadawcy oraz priorytetowy ruch botów na czacie.
+      </p>
+      <div class="form-group">
+        <label>Kod aktywacyjny PRO (wpisz np. <strong>PRO2026</strong>)</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="pro-code-input" class="form-control" placeholder="Wpisz kod PRO..." />
+          <button class="btn btn-pro" onclick="activatePremiumCode()">Aktywuj PRO</button>
+        </div>
+      </div>
+      <div id="pro-status-msg" style="font-size: 0.85rem; margin-top: 8px;"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADMIN PANEL -->
+  <div class="modal-backdrop" id="modal-admin">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🛡️ Panel Administratora Sieci TV</h3>
+        <button class="btn" onclick="closeModal('modal-admin')">✕</button>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
+        Zarządzanie kontami użytkowników, nadawanie statusu PRO oraz kontrola stacji w pamięci lokalnej.
+      </p>
+      <div class="form-group">
+        <label>Komunikat Globalny na Pasek Ramówki</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="admin-broadcast-input" class="form-control" placeholder="Wpisz komunikat na antenę..." />
+          <button class="btn btn-danger" onclick="sendAdminBroadcast()">Nadaj</button>
+        </div>
+      </div>
+      <div class="panel-title" style="margin: 12px 0 8px;">Zarejestrowani Użytkownicy</div>
+      <div id="admin-users-list" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;"></div>
+      <button class="btn btn-danger" onclick="resetAllData()">⚠️ Resetuj całą bazę lokalną</button>
+    </div>
+  </div>
+
+  <script>
+    // STATE & STORAGE KEYS
+    const USERS_KEY = 'mb_public_users_v1';
+    const CURRENT_USER_KEY = 'mb_public_session_v1';
+    const STATIONS_KEY = 'mb_public_stations_v1';
+
+    let authMode = 'login';
+    let currentUser = null;
+    let stations = [];
+    let activeStation = null;
+    let isLive = false;
+    let isAdBreak = false;
+    let botsEnabled = false;
+    let botInterval = null;
+    let viewerCount = 0;
+    let uploadedLogoDataUrl = null;
+
+    // INIT
+    window.addEventListener('DOMContentLoaded', () => {
+      loadStorage();
+      if (currentUser) {
+        enterStudio();
+      }
+    });
+
+    // KEYBOARD SHORTCUT 'R' FOR COMMERCIAL BREAK
+    document.addEventListener('keydown', (e) => {
+      if (!currentUser) return;
+      const tag = document.activeElement.tagName.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+      if (e.key.toLowerCase() === 'r') {
+        toggleAdBreak();
+      }
+    });
+
+    function loadStorage() {
+      try {
+        const savedStations = JSON.parse(localStorage.getItem(STATIONS_KEY));
+        stations = Array.isArray(savedStations) && savedStations.length ? savedStations : getDefaultStations();
+        const savedSession = JSON.parse(localStorage.getItem(CURRENT_USER_KEY));
+        if (savedSession && savedSession.username) {
+          currentUser = savedSession;
+        }
+      } catch (err) {
+        stations = getDefaultStations();
+      }
+    }
+
+    function saveStorage() {
+      localStorage.setItem(STATIONS_KEY, JSON.stringify(stations));
+      if (currentUser) {
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+      } else {
+        localStorage.removeItem(CURRENT_USER_KEY);
+      }
+    }
+
+    function getUsersDB() {
+      try {
+        return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveUsersDB(users) {
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    }
+
+    function getDefaultStations() {
+      return [
+        {
+          id: 'st-1',
+          name: 'TVN 24 HD',
+          mode: 'geo',
+          shape: 'geo-circle',
+          bgColor: '#1d4ed8',
+          textColor: '#ffffff',
+          logoText: 'TVN24',
+          image: null,
+          category: 'NEWS / INFORMACJE'
+        },
+        {
+          id: 'st-2',
+          name: 'TVP SPORT',
+          mode: 'geo',
+          shape: 'geo-square',
+          bgColor: '#047857',
+          textColor: '#ffffff',
+          logoText: 'TVP',
+          image: null,
+          category: 'SPORT NA ŻYWO'
+        },
+        {
+          id: 'st-3',
+          name: 'TTV STUDIO',
+          mode: 'geo',
+          shape: 'geo-pill',
+          bgColor: '#ea580c',
+          textColor: '#ffffff',
+          logoText: 'TTV',
+          image: null,
+          category: 'ROZRYWKA / SHOW'
+        }
+      ];
+    }
+
+    // AUTHENTICATION LOGIC
+    function switchAuthTab(mode) {
+      authMode = mode;
+      document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+      document.getElementById('tab-register').classList.toggle('active', mode === 'register');
+      document.getElementById('auth-submit-btn').textContent = mode === 'login' ? 'Zaloguj się do studia' : 'Utwórz konto nadawcy';
+      document.getElementById('auth-message').textContent = '';
+    }
+
+    function handleAuthSubmit(e) {
+      e.preventDefault();
+      const usernameInput = document.getElementById('auth-username');
+      const passwordInput = document.getElementById('auth-password');
+      const msgEl = document.getElementById('auth-message');
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (username.length < 3 || password.length < 3) {
+        msgEl.style.color = 'var(--danger)';
+        msgEl.textContent = 'Login i hasło muszą mieć minimum 3 znaki.';
+        return;
+      }
+
+      const users = getUsersDB();
+
+      if (authMode === 'register') {
+        const exists = users.some(u => u.username.toLowerCase() === username.toLowerCase());
+        if (exists) {
+          msgEl.style.color = 'var(--danger)';
+          msgEl.textContent = 'Taki użytkownik już istnieje. Wybierz inny login.';
+          return;
+        }
+        // First registered user on this device becomes local Admin automatically
+        const isFirstUser = users.length === 0;
+        const newUser = {
+          username,
+          password,
+          isAdmin: isFirstUser,
+          isPro: isFirstUser
+        };
+        users.push(newUser);
+        saveUsersDB(users);
+        currentUser = newUser;
+        saveStorage();
+        enterStudio();
+      } else {
+        const found = users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
+        if (!found) {
+          msgEl.style.color = 'var(--danger)';
+          msgEl.textContent = 'Nieprawidłowy login lub hasło.';
+          return;
+        }
+        currentUser = found;
+        saveStorage();
+        enterStudio();
+      }
+    }
+
+    function enterStudio() {
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display = 'grid';
+      document.getElementById('header-controls').style.display = 'flex';
+      updateUserHeader();
+      renderChannelList();
+      if (stations.length > 0) {
+        selectStation(stations[0].id);
+      }
+    }
+
+    function updateUserHeader() {
+      const display = document.getElementById('user-display');
+      let badges = '';
+      if (currentUser.isPro) badges += ' <span class="badge-pro">PRO</span>';
+      if (currentUser.isAdmin) badges += ' <span class="badge-admin">ADMIN</span>';
+      display.innerHTML = `👤 ${currentUser.username}${badges}`;
+
+      const adminBtn = document.getElementById('btn-admin-panel');
+      adminBtn.style.opacity = currentUser.isAdmin ? '1' : '0.5';
+    }
+
+    function logout() {
+      currentUser = null;
+      saveStorage();
+      if (botInterval) clearInterval(botInterval);
+      location.reload();
+    }
+
+    // CHANNEL MANAGEMENT & CREATOR
+    function renderChannelList() {
+      const list = document.getElementById('channel-list');
+      list.innerHTML = '';
+      stations.forEach(st => {
+        const item = document.createElement('div');
+        item.className = 'channel-item' + (activeStation && activeStation.id === st.id ? ' active' : '');
+        item.onclick = () => selectStation(st.id);
+
+        const logoHtml = st.mode === 'upload' && st.image
+          ? `<img src="${st.image}" alt="${st.name}" />`
+          : `<span style="color:${st.textColor};">${st.logoText}</span>`;
+
+        const bgStyle = st.mode === 'upload' && st.image ? '#000' : st.bgColor;
+
+        item.innerHTML = `
+          <div class="channel-info">
+            <div class="mini-logo" style="background:${bgStyle};">${logoHtml}</div>
+            <div>
+              <div style="font-weight:700; font-size:0.9rem;">${st.name}</div>
+              <div style="font-size:0.72rem; color:var(--text-muted);">${st.category}</div>
+            </div>
+          </div>
+          <span style="font-size:0.75rem; color:var(--accent);">Wybierz</span>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function selectStation(id) {
+      const st = stations.find(s => s.id === id);
+      if (!st) return;
+      activeStation = st;
+      renderChannelList();
+
+      document.getElementById('active-station-header').textContent = `Podgląd Emisji: ${st.name}`;
+      document.getElementById('ad-station-name').textContent = st.name;
+      document.getElementById('screen-category').textContent = st.category;
+
+      const screenLogo = document.getElementById('screen-logo');
+      screenLogo.className = 'screen-logo ' + (st.mode === 'geo' ? st.shape : '');
+
+      if (st.mode === 'upload' && st.image) {
+        screenLogo.style.background = 'transparent';
+        screenLogo.style.boxShadow = 'none';
+        screenLogo.innerHTML = `<img src="${st.image}" alt="${st.name}" />`;
+      } else {
+        screenLogo.style.background = st.bgColor;
+        screenLogo.style.color = st.textColor;
+        screenLogo.style.boxShadow = '0 4px 15px rgba(0,0,0,0.5)';
+        screenLogo.innerHTML = `<span>${st.logoText}</span>`;
+      }
+    }
+
+    function toggleLogoMode() {
+      const mode = document.getElementById('logo-mode').value;
+      document.getElementById('geo-builder-section').style.display = mode === 'geo' ? 'block' : 'none';
+      document.getElementById('upload-builder-section').style.display = mode === 'upload' ? 'block' : 'none';
+      updateCreatorPreview();
+    }
+
+    function handleLogoFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        uploadedLogoDataUrl = evt.target.result;
+        updateCreatorPreview();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function applyPreset(brand) {
+      document.getElementById('logo-mode').value = 'geo';
+      toggleLogoMode();
+      if (brand === 'TVN') {
+        document.getElementById('new-station-name').value = 'TVN HD';
+        document.getElementById('geo-shape').value = 'geo-circle';
+        document.getElementById('geo-bg-color').value = '#1d4ed8';
+        document.getElementById('geo-text-color').value = '#ffffff';
+        document.getElementById('geo-text').value = 'tvn';
+      } else if (brand === 'TVP') {
+        document.getElementById('new-station-name').value = 'TVP 1';
+        document.getElementById('geo-shape').value = 'geo-square';
+        document.getElementById('geo-bg-color').value = '#0284c7';
+        document.getElementById('geo-text-color').value = '#ffffff';
+        document.getElementById('geo-text').value = 'TVP1';
+      } else if (brand === 'TTV') {
+        document.getElementById('new-station-name').value = 'TTV';
+        document.getElementById('geo-shape').value = 'geo-hex';
+        document.getElementById('geo-bg-color').value = '#f97316';
+        document.getElementById('geo-text-color').value = '#ffffff';
+        document.getElementById('geo-text').value = 'TTV';
+      } else if (brand === 'POLSAT') {
+        document.getElementById('new-station-name').value = 'NEWS TV';
+        document.getElementById('geo-shape').value = 'geo-pill';
+        document.getElementById('geo-bg-color').value = '#eab308';
+        document.getElementById('geo-text-color').value = '#000000';
+        document.getElementById('geo-text').value = 'NEWS';
+      }
+      updateCreatorPreview();
+    }
+
+    function updateCreatorPreview() {
+      const mode = document.getElementById('logo-mode').value;
+      const preview = document.getElementById('creator-logo-preview');
+
+      if (mode === 'upload' && uploadedLogoDataUrl) {
+        preview.className = 'screen-logo';
+        preview.style.position = 'static';
+        preview.style.background = 'transparent';
+        preview.innerHTML = `<img src="${uploadedLogoDataUrl}" alt="Podgląd" />`;
+      } else {
+        const shape = document.getElementById('geo-shape').value;
+        const bg = document.getElementById('geo-bg-color').value;
+        const txtCol = document.getElementById('geo-text-color').value;
+        const txt = document.getElementById('geo-text').value || 'TV';
+
+        preview.className = 'screen-logo ' + shape;
+        preview.style.position = 'static';
+        preview.style.background = bg;
+        preview.style.color = txtCol;
+        preview.innerHTML = `<span>${txt}</span>`;
+      }
+    }
+
+    function createStation() {
+      const name = document.getElementById('new-station-name').value.trim() || 'NOWA TV';
+      const mode = document.getElementById('logo-mode').value;
+      const shape = document.getElementById('geo-shape').value;
+      const bgColor = document.getElementById('geo-bg-color').value;
+      const textColor = document.getElementById('geo-text-color').value;
+      const logoText = document.getElementById('geo-text').value.trim() || 'TV';
+
+      const newSt = {
+        id: 'st-' + Date.now(),
+        name,
+        mode,
+        shape,
+        bgColor,
+        textColor,
+        logoText,
+        image: mode === 'upload' ? uploadedLogoDataUrl : null,
+        category: document.getElementById('ctrl-category').value
+      };
+
+      stations.unshift(newSt);
+      saveStorage();
+      renderChannelList();
+      selectStation(newSt.id);
+      closeModal('modal-creator');
+      uploadedLogoDataUrl = null;
+    }
+
+    // LIVE BROADCAST CONTROLS
+    function toggleLiveBroadcast() {
+      isLive = !isLive;
+      const btn = document.getElementById('btn-toggle-live');
+      const pill = document.getElementById('on-air-pill');
+
+      if (isLive) {
+        btn.textContent = '⏹️ ZAKOŃCZ EMISJĘ';
+        pill.classList.add('live');
+        viewerCount = Math.floor(Math.random() * 120) + 45;
+        addChatLine('System', 'Transmisja rozpoczęta! Sygnał satelitarny aktywny.', true);
+      } else {
+        btn.textContent = '🔴 START TRANSMISJI';
+        pill.classList.remove('live');
+        viewerCount = 0;
+        addChatLine('System', 'Transmisja zakończona.', true);
+      }
+      updateViewerDisplay();
+    }
+
+    function toggleAdBreak() {
+      isAdBreak = !isAdBreak;
+      document.getElementById('ad-overlay').classList.toggle('active', isAdBreak);
+    }
+
+    function setGraphicPack(packClass) {
+      const bg = document.getElementById('monitor-bg');
+      bg.className = 'monitor-bg';
+      if (packClass !== 'default') {
+        bg.classList.add(packClass);
+      }
+    }
+
+    function updateAgeRating(val) {
+      const badge = document.getElementById('screen-age');
+      badge.className = 'age-badge';
+      if (val === 'smile') {
+        badge.classList.add('age-smile');
+        badge.textContent = '😊';
+      } else {
+        badge.classList.add('age-' + val);
+        badge.textContent = val;
+      }
+    }
+
+    function updateLiveMetadata() {
+      const cat = document.getElementById('ctrl-category').value;
+      const headline = document.getElementById('ctrl-headline').value;
+      const ramowka = document.getElementById('ctrl-ramowka').value;
+
+      document.getElementById('screen-category').textContent = cat;
+      document.getElementById('screen-headline').textContent = headline;
+      document.getElementById('ticker-text-display').textContent = ramowka;
+
+      if (activeStation) {
+        activeStation.category = cat;
+        saveStorage();
+        renderChannelList();
+      }
+    }
+
+    function toggleLowerThird() {
+      const lt = document.getElementById('lower-third');
+      document.getElementById('lt-title-display').textContent = document.getElementById('ctrl-lt-title').value;
+      document.getElementById('lt-sub-display').textContent = document.getElementById('ctrl-lt-sub').value;
+      lt.classList.toggle('visible');
+    }
+
+    // CHAT & BOTS
+    const botNames = ['Marek_TV', 'Kasia2012', 'Widz_PL', 'Telemaniak', 'KubaGaming', 'Anna_News', 'Sportowiec99'];
+    const botMessages = [
+      'Świetna jakość obrazu! 🔥',
+      'Pozdrowienia z Polski!',
+      'Co będzie następne w ramówce?',
+      'Super oprawa graficzna studia!',
+      'Oglądam od początku transmisji 👏',
+      'Dobra robota realizatorze!'
+    ];
+
+    function toggleBots() {
+      botsEnabled = !botsEnabled;
+      const btn = document.getElementById('btn-toggle-bots');
+      btn.textContent = botsEnabled ? '🤖 Boty Czatu: ON' : '🤖 Boty Czatu: OFF';
+      btn.classList.toggle('btn-primary', botsEnabled);
+
+      if (botsEnabled) {
+        botInterval = setInterval(() => {
+          const name = botNames[Math.floor(Math.random() * botNames.length)];
+          const text = botMessages[Math.floor(Math.random() * botMessages.length)];
+          addChatLine(name, text, true);
+          if (isLive) {
+            viewerCount += Math.floor(Math.random() * 15) + 1;
+            updateViewerDisplay();
+          }
+        }, 3200);
+      } else {
+        clearInterval(botInterval);
+      }
+    }
+
+    function boostBotViewers() {
+      viewerCount += 500;
+      updateViewerDisplay();
+      addChatLine('System', 'Napływ nowej widowni (+500 widzów na żywo)!', true);
+    }
+
+    function updateViewerDisplay() {
+      document.getElementById('viewer-count').textContent = `👁️ ${viewerCount.toLocaleString('pl-PL')} widzów`;
+    }
+
+    function sendChatMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      const txt = input.value.trim();
+      if (!txt) return;
+      addChatLine(currentUser.username, txt, false);
+      input.value = '';
+    }
+
+    function addChatLine(user, text, isBot) {
+      const box = document.getElementById('chat-box');
+      const div = document.createElement('div');
+      div.className = 'chat-msg';
+      const botTag = isBot ? '<span class="chat-bot-tag">BOT</span>' : '';
+      div.innerHTML = `${botTag}<span class="chat-user">${user}:</span><span>${text}</span>`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    // PREMIUM & ADMIN PANEL
+    function activatePremiumCode() {
+      const code = document.getElementById('pro-code-input').value.trim().toUpperCase();
+      const msg = document.getElementById('pro-status-msg');
+      if (code === 'PRO2026' || code === 'VIP' || code === 'KOREKPRO') {
+        currentUser.isPro = true;
+        const users = getUsersDB();
+        const idx = users.findIndex(u => u.username === currentUser.username);
+        if (idx !== -1) users[idx].isPro = true;
+        saveUsersDB(users);
+        saveStorage();
+        updateUserHeader();
+        msg.style.color = 'var(--success)';
+        msg.textContent = 'Aktywowano konto PRO! Masz teraz złotą odznakę nadawcy.';
+      } else {
+        msg.style.color = 'var(--danger)';
+        msg.textContent = 'Nieprawidłowy kod. Wpisz PRO2026.';
+      }
+    }
+
+    function openAdminPanel() {
+      if (!currentUser || !currentUser.isAdmin) {
+        alert('Brak uprawnień administratora. Tylko główny administrator tego studia ma dostęp do tego panelu.');
+        return;
+      }
+      renderAdminUsers();
+      openModal('modal-admin');
+    }
+
+    function renderAdminUsers() {
+      const list = document.getElementById('admin-users-list');
+      const users = getUsersDB();
+      list.innerHTML = '';
+      users.forEach(u => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:var(--bg-dark); padding:8px 12px; border-radius:6px;';
+        row.innerHTML = `
+          <span><strong>${u.username}</strong> ${u.isAdmin ? '(Admin)' : ''} ${u.isPro ? '★ PRO' : ''}</span>
+          <button class="btn" style="padding:4px 8px; font-size:0.75rem;" onclick="toggleUserPro('${u.username}')">Przełącz PRO</button>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function toggleUserPro(username) {
+      const users = getUsersDB();
+      const target = users.find(u => u.username === username);
+      if (target) {
+        target.isPro = !target.isPro;
+        saveUsersDB(users);
+        if (currentUser.username === username) {
+          currentUser.isPro = target.isPro;
+          saveStorage();
+          updateUserHeader();
+        }
+        renderAdminUsers();
+      }
+    }
+
+    function sendAdminBroadcast() {
+      const txt = document.getElementById('admin-broadcast-input').value.trim();
+      if (!txt) return;
+      document.getElementById('ticker-text-display').textContent = `🚨 KOMUNIKAT ADMINISTRATORA: ${txt}`;
+      closeModal('modal-admin');
+    }
+
+    function resetAllData() {
+      if (confirm('Czy na pewno chcesz wyczyścić wszystkie lokalne konta i stacje?')) {
+        localStorage.removeItem(USERS_KEY);
+        localStorage.removeItem(CURRENT_USER_KEY);
+        localStorage.removeItem(STATIONS_KEY);
+        location.reload();
+      }
+    }
+
+    // MODAL HELPERS
+    function openModal(id) {
+      document.getElementById(id).classList.add('open');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+  </script>
+</body>
+</html>
